@@ -184,6 +184,9 @@ namespace Problems.Golf
             Solver.SolveSerial(masterminds);
             var counts = masterminds.Select(mastermind => mastermind.GuessCount);
 
+            //Test Name:	SolveSerialAll
+            //Test Outcome:	Passed
+            //Result StandardOutput:	1000 11555 9 15 11.555
             Console.WriteLine(string.Format("{0} {1} {2} {3} {4}", counts.Count(), counts.Sum(), counts.Min(), counts.Max(), counts.Average()));
         }
     }
