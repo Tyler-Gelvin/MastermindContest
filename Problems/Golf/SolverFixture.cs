@@ -172,5 +172,19 @@ namespace Problems.Golf
 
             Console.WriteLine(string.Format("{0} {1} {2}", counts.Min(), counts.Max(), counts.Average()));
         }
+
+        [TestMethod]
+        public void SolveSerialAll()
+        {
+            var masterminds = RawData
+                .PassPhrases
+                .Select(pass => new Mastermind(pass))
+                .ToList();
+
+            Solver.SolveSerial(masterminds);
+            var counts = masterminds.Select(mastermind => mastermind.GuessCount);
+
+            Console.WriteLine(string.Format("{0} {1} {2} {3} {4}", counts.Count(), counts.Sum(), counts.Min(), counts.Max(), counts.Average()));
+        }
     }
 }
