@@ -20,13 +20,5 @@ namespace OnlyProject
             
             Console.WriteLine(best);
         }
-
-        [TestMethod]
-        public void FindBestLetterCounter()
-        {
-            var best = GuessPatternFinder.FindUsingLetterCounts(RawData.Words);
-
-            Console.WriteLine(best);
-        }
     }
 }

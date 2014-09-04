@@ -55,5 +55,17 @@ namespace OnlyProject
 
             list.ForEach(t => Console.WriteLine(t));
         }
+
+        [TestMethod]
+        public void FindBestLetters()
+        {
+            var list = RawData
+                .Letters
+                .Select(letter => Tuple.Create(letter, RawData.Words.Where(word => word.Contains(letter)).Count()))
+                .OrderBy(t => t.Item2)
+                .ToList();
+
+            list.ForEach(t => Console.WriteLine(t.Item1 + " " + t.Item2));
+        }
     }
 }

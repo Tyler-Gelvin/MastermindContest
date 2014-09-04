@@ -8,7 +8,8 @@ namespace OnlyProject
 {
     public class WordSignature
     {
-        public static readonly IReadOnlyDictionary<int, IEnumerable<WordSignature>> AllSignatures;
+        static readonly Random _r = new Random();
+        public static readonly IReadOnlyDictionary<int, List<WordSignature>> AllSignatures;
 
         public readonly int Letters;
         public readonly IReadOnlyList<int> Counts;
@@ -20,7 +21,7 @@ namespace OnlyProject
                 .Words
                 .Select(word => new WordSignature(word))
                 .GroupBy(word => word.Letters)
-                .ToDictionary(g1 => g1.Key, g1 => g1.ToList().AsEnumerable());
+                .ToDictionary(g1 => g1.Key, g1 => g1.ToList());
         }
 
         public WordSignature(string s)
@@ -47,6 +48,12 @@ namespace OnlyProject
         public IEnumerable<int?> SubtractFrom(IEnumerable<int?> total)
         {
             return total.Select((t, i) => t.HasValue ? t.Value - Counts[i] : (int?)null).ToList().AsReadOnly();
+        }
+
+        public static string GetRandomWord(int length)
+        {
+            var list = AllSignatures[length];
+            return list[_r.Next(list.Count)].Word;
         }
 
         public override string ToString()

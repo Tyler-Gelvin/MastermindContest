@@ -105,7 +105,7 @@ namespace OnlyProject
             }
         }
 
-        public static IEnumerable<LetterCounter> GetAny(int maxLength)
+        public static IEnumerable<LetterCounter> GetAny(int maxLength, IReadOnlyList<char> letters = null)
         {
             if (maxLength< 1)
             {
@@ -117,7 +117,7 @@ namespace OnlyProject
             }
             else
             {
-                return GetAny(maxLength - 1).SelectMany(counter => counter.AddOneLetter());
+                return GetAny(maxLength - 1).SelectMany(counter => counter.AddOneLetter(letters));
             }
         }
 
@@ -127,10 +127,10 @@ namespace OnlyProject
             return GuessPatternFinder.FindByMaxGroups(counters, counter => counter.WordPattern, words);
         }
 
-        public IEnumerable<LetterCounter> AddOneLetter()
+        public IEnumerable<LetterCounter> AddOneLetter(IReadOnlyList<char> letters = null)
         {
             yield return this;
-            foreach (var i in RawData.Letters)
+            foreach (var i in letters ?? RawData.Letters)
             {
                 if (!Letters.Contains(i))
 

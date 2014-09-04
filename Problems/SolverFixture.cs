@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace OnlyProject
 {
@@ -133,10 +134,8 @@ namespace OnlyProject
         {
             var phrase = "sublime hawaiian creeps";
             var mastermind = new Mastermind(phrase);
-            Solver.Solve(mastermind);
+            var solver = Solver.Solve(mastermind);
 
-            Console.WriteLine(phrase + " in " + mastermind.GuessCount);
-            Console.WriteLine(mastermind.GuessCount);
             foreach (var line in mastermind.Guesses)
             {
                 Console.WriteLine(line);
@@ -148,6 +147,7 @@ namespace OnlyProject
         {
             var masterminds = RawData
                 .PassPhrases
+                .Skip(50)
                 .Take(5)
                 .Select(pass => new Mastermind(pass))
                 .ToList();
@@ -155,14 +155,19 @@ namespace OnlyProject
             Solver.SolveParallel(masterminds);
             var counts = masterminds.Select(mastermind => mastermind.GuessCount);
 
-            Console.WriteLine(string.Format("{0} {1} {2}", counts.Min(), counts.Max(), counts.Average()));
+            Console.WriteLine(string.Format("{0} {1} {2} {3} {4}", counts.Count(), counts.Sum(), counts.Min(), counts.Max(), counts.Average()));
         }
 
         [TestMethod]
         public void SolveSerial5()
         {
+            //Test Name:	SolveSerial5
+            //Test Outcome:	Passed
+            //Result StandardOutput:	8 12 10.6
+
             var masterminds = RawData
                 .PassPhrases
+                .Skip(50)
                 .Take(5)
                 .Select(pass => new Mastermind(pass))
                 .ToList();
@@ -170,7 +175,7 @@ namespace OnlyProject
             Solver.SolveSerial(masterminds);
             var counts = masterminds.Select(mastermind => mastermind.GuessCount);
 
-            Console.WriteLine(string.Format("{0} {1} {2}", counts.Min(), counts.Max(), counts.Average()));
+            Console.WriteLine(string.Format("{0} {1} {2} {3} {4}", counts.Count(), counts.Sum(), counts.Min(), counts.Max(), counts.Average()));
         }
 
         [TestMethod]
@@ -187,6 +192,28 @@ namespace OnlyProject
             //Test Name:	SolveSerialAll
             //Test Outcome:	Passed
             //Result StandardOutput:	1000 11555 9 15 11.555
+            Console.WriteLine(string.Format("{0} {1} {2} {3} {4}", counts.Count(), counts.Sum(), counts.Min(), counts.Max(), counts.Average()));
+        }
+
+        [TestMethod]
+        public void LookAtPhraseCount()
+        {
+            var mastermind = new Mastermind(RawData.TestPhrase);
+            var count = Solver.GetPossiblePhraseCount(mastermind);
+            Console.WriteLine(count);
+        }
+
+        [TestMethod]
+        public void SolveParallelAll()
+        {
+            var masterminds = RawData
+                .PassPhrases
+                .Select(pass => new Mastermind(pass))
+                .ToList();
+
+            Solver.SolveParallel(masterminds);
+            var counts = masterminds.Select(mastermind => mastermind.GuessCount);
+
             Console.WriteLine(string.Format("{0} {1} {2} {3} {4}", counts.Count(), counts.Sum(), counts.Min(), counts.Max(), counts.Average()));
         }
     }

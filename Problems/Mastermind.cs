@@ -125,7 +125,14 @@ namespace OnlyProject
             if (!CharCounts.TryGetValue(s, out counts))
             {
                 counts = CreateCharCounts(s);
-                CharCounts.Add(s, counts);
+                try
+                {
+                    CharCounts.Add(s, counts);
+                }
+                catch(ArgumentException)
+                {
+                    // Look at this multithreading support.
+                }
             }
 
             return counts;

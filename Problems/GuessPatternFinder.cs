@@ -12,7 +12,6 @@ namespace OnlyProject
         public static readonly GuessPatternFinder FindByMaxGroupsInstance = new GuessPatternFinder { FindBestTest = FindByMaxGroups };
         public static readonly GuessPatternFinder FindByMinGroupSizeInstance = new GuessPatternFinder { FindBestTest = FindByMinGroupSize };
         public static readonly GuessPatternFinder FindSpacesInstance = new GuessPatternFinder { FindBestTest = FindUsingSpaces, SkipFinalGuess = true };
-        public static readonly GuessPatternFinder FindLettersInstance = new GuessPatternFinder { FindBestTest = FindUsingLetterCounts, SkipFinalGuess = true, Terminates = false };
 
         public Func<IEnumerable<string>, GuessPattern> FindBestTest;
         public bool SkipFinalGuess = true;
@@ -32,8 +31,8 @@ namespace OnlyProject
         
         public static T FindByMaxGroups<T>(IEnumerable<T> providers, Func<T, string> getCandidate, IEnumerable<string> words)
         {
-            var sampleProviders = TakeSome(providers, 1000, 0).ToList();
-            var sampleWords = TakeSome(words, 1000, 1).ToList();
+            var sampleProviders = TakeSome(providers, 2000, 0).ToList();
+            var sampleWords = TakeSome(words, 2000, 1).ToList();
 
             return sampleProviders
                 .OrderByDescending(provider => -GetScore(getCandidate(provider), sampleWords, ScoreMaxGroups))
@@ -42,7 +41,7 @@ namespace OnlyProject
 
         static IEnumerable<T> TakeSome<T>(IEnumerable<T> list, int number, int offset)
         {
-            if (number > list.Count())
+            if (number >= list.Count())
             {
                 return list;
             }
@@ -138,44 +137,6 @@ namespace OnlyProject
             }
 
             return new SpaceGuessPattern(best);
-        }
-
-        public static LetterCounter FindUsingLetterCounts(IEnumerable<string> candidates)
-        {
-            LetterCounter best = null;
-            var bestScore = double.MinValue;
-
-            foreach (var current in LetterCounter.GetAny())
-            {
-                var currentScore = GetScore(current.WordPattern, candidates, ScoreMaxGroups);
-                if (currentScore > bestScore)
-                {
-                    best = current;
-                    bestScore = currentScore;
-                    //Console.WriteLine("best - " + best + " " + bestScore);
-                }
-            }
-
-            var changed = true;
-            while (changed)
-            {
-                changed = false;
-                foreach (var current in best.AddOneLetter())
-                {
-                    var currentScore = GetScore(current.WordPattern, candidates, ScoreMaxGroups);
-                    //Console.WriteLine("test - " + current + " " + currentScore);
-
-                    if (currentScore > bestScore)
-                    {
-                        changed = true;
-                        best = current;
-                        bestScore = currentScore;
-                        //Console.WriteLine("best - " + best + " " + bestScore);
-                    }
-                }
-            }
-
-            return best;
         }
     }
 }

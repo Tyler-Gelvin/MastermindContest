@@ -9,9 +9,9 @@ namespace OnlyProject
     public class RawData
     {
         public static readonly string TestPhrase = "dumbest rewarding ventricles";
-        public static readonly IEnumerable<string> Words;
-        public static readonly IEnumerable<string> PassPhrases;
-        public static IEnumerable<char> Letters;
+        public static readonly IReadOnlyList<string> Words;
+        public static readonly IReadOnlyList<string> PassPhrases;
+        public static IReadOnlyList<char> Letters;
         public static readonly int LetterCount;
         public static readonly int CharacterCount;
 
@@ -33,7 +33,7 @@ namespace OnlyProject
             AverageWordCharacters = Words.Select(line => line.Length).Average();
             MaxPassLetters = MaxWordCharacters * 3;
             MaxPassCharacters = MaxWordCharacters * 3 + 2;
-            Letters = "abcdefghijklmnopqrstuvwxyz";
+            Letters = "abcdefghijklmnopqrstuvwxyz".ToList();
             LetterCount = Letters.Count();
             CharacterCount = Letters.Count() + 1;
             MaxWordLetterCount = Mastermind.GetMaxCharCount(Words);

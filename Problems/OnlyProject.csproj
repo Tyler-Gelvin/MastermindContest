@@ -54,6 +54,8 @@
     <Compile Include="GuessPattern.cs" />
     <Compile Include="GuessResult.cs" />
     <Compile Include="IMastermind.cs" />
+    <Compile Include="LetterCounterFinder.cs" />
+    <Compile Include="LetterCounterFinderFixture.cs" />
     <Compile Include="NoGuessPattern.cs" />
     <Compile Include="LetterCounter.cs" />
     <Compile Include="Mastermind.cs" />

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,17 +12,25 @@ namespace OnlyProject
         public static readonly GuessPattern LengthTester;
         public static readonly IReadOnlyList<LetterCounter> BaseLetterCounters;
         public static readonly IReadOnlyList<LetterCounter> AllLetterCounters;
+        public static readonly char BonusLetter;
 
         Mastermind Mastermind;
         public int Length { get; private set; }
+        public int BonusLetterCount { get; private set; }
         public IEnumerable<int?> LetterCounts { get; private set; }
         public IReadOnlyList<int> WordLengths { get; private set; }
         public IReadOnlyList<string> PossiblePhrases { get; private set; }
+
+        public TimeSpan TimeForSteps1And2;
+        public TimeSpan TimeForPassPhrases;
+        public TimeSpan TimeForStep3;
 
         static Solver()
         {
             var max = RawData.MaxWordCharacters;
             var builder = new StringBuilder();
+            BonusLetter = 'e';
+            builder.Append(BonusLetter, RawData.MaxPassCharacters);
             foreach (var letter in RawData.Letters)
             {
                 builder.Append(letter, RawData.MaxPassLetters);
@@ -29,9 +38,9 @@ namespace OnlyProject
             builder.Append(' ', 2);
             LengthTester = new StringGuessPattern(builder.ToString());
 
-            BaseLetterCounters = GetLetterCounters().ToList().AsReadOnly();
-            AllLetterCounters = BaseLetterCounters
-                .SelectMany(counter => new[]{counter, counter.ExtendedLetterCounter, counter.ReducedLetterCounter})
+            BaseLetterCounters = LetterCounterFinder.GetLetterCounters().ToList().AsReadOnly();
+            AllLetterCounters = new[]{new LetterCounter(BonusLetter)}
+                .Concat(BaseLetterCounters.SelectMany(counter => new[]{counter, counter.ExtendedLetterCounter, counter.ReducedLetterCounter}))
                 .ToList()
                 .AsReadOnly();
         }
@@ -51,20 +60,58 @@ namespace OnlyProject
 
         public static void SolveSerial(IEnumerable<Mastermind> masterminds)
         {
-            masterminds
-                .Select(mastermind => Solve(mastermind))
-                .ToList();
+            List<Solver> finishedSolvers = new List<Solver>();
+
+            foreach(var mastermind in masterminds)
+            {
+                var solver = Solver.Solve(mastermind);
+                finishedSolvers.Add(solver);
+            }
         }
 
-        public static Mastermind Solve(Mastermind mastermind)
+        public static Solver Solve(Mastermind mastermind)
         {
-            new Solver(mastermind).Solve();
-            return mastermind;
+            var solver = new Solver(mastermind);
+            solver.Solve();
+            solver.Report();
+            return solver;
+        }
+
+        void Report()
+        {
+            Console.WriteLine(Mastermind.GuessCount + ", " + Mastermind.Guesses.Last().ToString() + ", " + TimeForSteps1And2 + ", " + TimeForPassPhrases + ", " + TimeForStep3);
         }
 
         void Solve()
         {
-            Length = GetLength(Mastermind);
+            var timer = new Stopwatch();
+            
+            timer.Start();
+            SolvePhaseOne();
+            SolvePhaseTwo();
+            timer.Stop();
+            TimeForSteps1And2 = timer.Elapsed;
+            
+            timer.Restart();
+            SetPossiblePhrases();
+            timer.Stop();
+            TimeForPassPhrases = timer.Elapsed;
+
+            timer.Restart();
+            SolvePhaseThree();
+            timer.Stop();
+            TimeForStep3 = timer.Elapsed;
+        }
+
+        void SolvePhaseOne()
+        {
+            var result = Mastermind.Guess(LengthTester);
+            Length = result.Chars + result.Positions;
+            BonusLetterCount = result.Positions;
+        }
+
+        void SolvePhaseTwo()
+        {
             var proxy = new ProxyMastermind(Mastermind, BaseLetterCounters);
             WordLengths = GetWordLengths(proxy, Length).ToList();
 
@@ -74,32 +121,60 @@ namespace OnlyProject
                 proxy.Guess(new NoGuessPattern());
             }
 
-            int value;
             LetterCounts = AllLetterCounters
-                .Select(counter => proxy.LetterCounts.TryGetValue(counter, out value) ? value : (int?)null)
+                .Select(counter => GetLetterCount(counter, proxy))
                 .ToList()
                 .AsReadOnly();
+        }
 
-            PossiblePhrases = GetPossiblePhrases().ToList().AsReadOnly();
-
+        void SolvePhaseThree()
+        {
             var node = new SolverNode(PossiblePhrases);
             node.Guess(Mastermind);
+        }
+
+        int? GetLetterCount(LetterCounter counter, ProxyMastermind proxy)
+        {
+            int value;
+            if (counter.Letters == BonusLetter.ToString())
+            {
+                return BonusLetterCount;
+            }
+            else
+            {
+                return proxy.LetterCounts.TryGetValue(counter, out value) ? value : (int?)null;
+            }
+        }
+
+        void SetPossiblePhrases()
+        {
+            PossiblePhrases = GetPossiblePhrases().ToList().AsReadOnly();
         }
 
         public static IEnumerable<string> GetPossiblePhrases(Mastermind mastermind)
         {
             var solver = new Solver(mastermind);
-            solver.Solve();
-            return solver.PossiblePhrases;
+            solver.SolvePhaseOne();
+            solver.SolvePhaseTwo();
+            return solver.GetPossiblePhrases();
+        }
+
+        public static int GetPossiblePhraseCount(Mastermind mastermind)
+        {
+            var solver = new Solver(mastermind);
+            solver.SolvePhaseOne();
+            solver.SolvePhaseTwo();
+            return solver.GetPossiblePhrases(true).Count();
         }
             
-        public IEnumerable<string> GetPossiblePhrases()
+        public IEnumerable<string> GetPossiblePhrases(bool countOnly = false)
         {
-            var firstList = WordSignature.AllSignatures[WordLengths[0]];
+            var firstAllocation = LetterCounts;
+            var firstList = WordSignature.AllSignatures[WordLengths[0]].Where(word => word.FitsIn(firstAllocation));
 
             foreach(var first in firstList)
             {
-                var secondAllocation = first.SubtractFrom(LetterCounts);
+                var secondAllocation = first.SubtractFrom(firstAllocation);
                 var secondList = WordSignature.AllSignatures[WordLengths[1]].Where(word => word.FitsIn(secondAllocation));
 
                 foreach(var second in secondList)
@@ -109,84 +184,16 @@ namespace OnlyProject
 
                     foreach(var third in thirdList)
                     {
-                        //yield return "dummy";
-                        yield return string.Format("{0} {1} {2}", first, second, third);
+                        yield return countOnly ? "" : string.Format("{0} {1} {2}", first, second, third);
                     }
                 }
             }
         }
 
-        static IEnumerable<LetterCounter> GetLetterCounters()
-        {
-            /*
-            2m
-            yield return new LetterCounter("a");
-            yield return new LetterCounter("e");
-            yield return new LetterCounter("i");
-            yield return new LetterCounter("o");
-            yield return new LetterCounter("u");
-            */
-
-
-            /*
-             1.5m
-yield return new LetterCounter("as");
-yield return new LetterCounter("ib");
-yield return new LetterCounter("dm");
-yield return new LetterCounter("gp");
-yield return new LetterCounter("et");
- */
-
-            /*
-             1.1m
-yield return new LetterCounter("aes");
-yield return new LetterCounter("iseb");
-yield return new LetterCounter("dm");
-yield return new LetterCounter("gop");
-yield return new LetterCounter("h");
-  */
-
-            /*
-//.76m
-yield return new LetterCounter("auto");
-yield return new LetterCounter("bels");
-yield return new LetterCounter("twin");
-yield return new LetterCounter("gupy");
-yield return new LetterCounter("hrzf");
- */
-
-                      /*
-            // 3.1m
-            yield return new LetterCounter("abcd");
-            yield return new LetterCounter("efghi");
-            yield return new LetterCounter("jklmno");
-            yield return new LetterCounter("pqrst");
-            yield return new LetterCounter("uvwxyz");
-             */
-
-            /*
-            //.202m
-            yield return new LetterCounter("auto");
-            yield return new LetterCounter("bels");
-            yield return new LetterCounter("twin");
-            yield return new LetterCounter("gupy");
-            yield return new LetterCounter("hrzf");
-            yield return new LetterCounter("eqzm");
-            */
-
-            // 32k
-            yield return new LetterCounter("auto");
-            yield return new LetterCounter("bels");
-            yield return new LetterCounter("twin");
-            yield return new LetterCounter("gupy");
-            yield return new LetterCounter("hrzf");
-            yield return new LetterCounter("nectd");
-            yield return new LetterCounter("iseb");
-        }
-
         public static IReadOnlyList<int> GetLetterCounts(Mastermind mastermind)
         {
-            return GetLetterCounters()
+            return LetterCounterFinder
+                .GetLetterCounters()
                 .Select(counter => mastermind.Guess(counter).Chars)
                 .ToList()
                 .AsReadOnly();
