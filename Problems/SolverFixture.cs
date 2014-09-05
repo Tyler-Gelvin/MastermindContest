@@ -143,6 +143,19 @@ namespace OnlyProject
         }
 
         [TestMethod]
+        public void SolveWhiteface()
+        {
+            var phrase = "whiteface rends opposed";
+            var mastermind = new Mastermind(phrase);
+            var solver = Solver.Solve(mastermind);
+
+            foreach (var line in mastermind.Guesses)
+            {
+                Console.WriteLine(line);
+            }
+        }
+
+        [TestMethod]
         public void SolveParallel5()
         {
             var masterminds = RawData

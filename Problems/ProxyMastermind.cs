@@ -8,6 +8,7 @@ namespace OnlyProject
 {
     public class ProxyMastermind : IMastermind
     {
+        public static int RequiredCounters = 5;
         public Mastermind RealMastermind;
         public IDictionary<LetterCounter, int> LetterCounts = new Dictionary<LetterCounter, int>();
         Queue<LetterCounter> GuessQueue = new Queue<LetterCounter>();

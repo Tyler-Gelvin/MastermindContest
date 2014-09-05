@@ -10,6 +10,7 @@ namespace OnlyProject
     public static class LetterCounterFinder
     {
         static Random _r = new Random();
+        public static int RequiredLetterCounters = 5;
 
         public static IEnumerable<LetterCounter> GetLetterCounters()
         {
@@ -110,11 +111,27 @@ yield return new LetterCounter("hrzf");
             yield return new LetterCounter("es");
              */
 
+            /*
             yield return new LetterCounter("rstinacopy");
             yield return new LetterCounter("sldumrbvqaw");
             yield return new LetterCounter("ndiglfmtujvy");
             yield return new LetterCounter("rthdofwcujkbx");
             yield return new LetterCounter("stuhmpolyz");
+            yield return new LetterCounter("a");
+            yield return new LetterCounter("i");
+            yield return new LetterCounter("s");
+            yield return new LetterCounter("t");
+             */
+
+            yield return new LetterCounter("rstina");
+            yield return new LetterCounter("sldumr");
+            yield return new LetterCounter("ndiglf");
+            yield return new LetterCounter("rthdof");
+            yield return new LetterCounter("stuhmp");
+            yield return new LetterCounter("a");
+            yield return new LetterCounter("i");
+            yield return new LetterCounter("s");
+            yield return new LetterCounter("t");
         }
 
         public static Tuple<string, double> EvaluateByMeanSquared(LetterCounter letterCounter)

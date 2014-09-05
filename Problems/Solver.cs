@@ -115,7 +115,7 @@ namespace OnlyProject
             var proxy = new ProxyMastermind(Mastermind, BaseLetterCounters);
             WordLengths = GetWordLengths(proxy, Length).ToList();
 
-            var extra = Math.Max(BaseLetterCounters.Count() - proxy.LetterCounts.Count(), 0);
+            var extra = Math.Max(LetterCounterFinder.RequiredLetterCounters - proxy.LetterCounts.Count(), 0);
             for (int i = 0; i < extra; i++)
             {
                 proxy.Guess(new NoGuessPattern());
